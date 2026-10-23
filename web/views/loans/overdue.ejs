@@ -1,0 +1,72 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Danh Sách Phiếu Mượn Quá Hạn</h1>
+    <p class="page-subtitle">Các phiếu mượn ở trạng thái Borrowed có ngày hẹn trả trước ngày hôm nay</p>
+  </div>
+  <a href="/loans" class="btn btn-secondary">&larr; Tất cả phiếu mượn</a>
+</div>
+
+<div class="card">
+  <div class="card-header" style="background: #fee2e2; color: #991b1b;">
+    <strong>Tổng số phiếu đang quá hạn: <%= loans.length %></strong>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <% if (loans.length === 0) { %>
+      <div style="padding: 3rem; text-align: center; color: #166534; font-weight: 600;">
+        Tuyệt vời! Hiện tại không có phiếu mượn nào bị quá hạn.
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Mã phiếu</th>
+              <th>Người mượn</th>
+              <th>Đơn vị</th>
+              <th>Thiết bị mượn</th>
+              <th>Hạn trả</th>
+              <th>Số ngày trễ</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% loans.forEach(l => { %>
+              <tr>
+                <td><strong><%= l.loan_code %></strong></td>
+                <td>
+                  <div><%= l.borrower_name %></div>
+                  <small style="color: #64748b;"><%= l.borrower_email %></small>
+                </td>
+                <td><%= l.department %></td>
+                <td>
+                  <% if (Array.isArray(l.asset_titles)) { %>
+                    <ul style="padding-left: 1.2rem; margin: 0; font-size: 0.85rem;">
+                      <% l.asset_titles.forEach(t => { %>
+                        <li><%= t %></li>
+                      <% }) %>
+                    </ul>
+                  <% } else { %>
+                    <%= l.asset_titles %>
+                  <% } %>
+                </td>
+                <td><strong style="color: #dc2626;"><%= formatDate(l.due_date) %></strong></td>
+                <td>
+                  <span class="badge badge-rejected" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">
+                    Trễ <%= l.days_overdue %> ngày
+                  </span>
+                </td>
+                <td>
+                  <a href="/loans/<%= l.id %>" class="btn btn-primary btn-sm">Thu hồi / Xử lý &rarr;</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,43 @@
+<%- include('../partials/header') %>
+
+<div class="no-print" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h1 class="page-title">Nhãn Nhận Diện Tài Sản</h1>
+    <p class="page-subtitle">Nhãn in dán thiết bị kèm mã QR phục vụ kiểm kê nhanh</p>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <button onclick="window.print()" class="btn btn-primary">&#128438; In Nhãn Này</button>
+    <a href="/assets/<%= asset.id %>" class="btn btn-secondary">&larr; Quay lại</a>
+  </div>
+</div>
+
+<div class="print-label-box" style="max-width: 440px; margin: 2rem auto; border: 2px solid #0f172a; border-radius: 12px; padding: 1.5rem; background: #ffffff; box-shadow: var(--shadow-md);">
+  
+  <div style="border-bottom: 2px solid #0f172a; padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #2563eb;">HỆ THỐNG QUẢN LÝ THIẾT BỊ</div>
+      <div style="font-size: 0.7rem; color: #64748b;">ĐƠN VỊ: TRƯỜNG ĐẠI HỌC CNTT</div>
+    </div>
+    <span class="badge badge-<%= asset.status %>"><%= asset.status %></span>
+  </div>
+
+  <div style="display: flex; gap: 1.25rem; align-items: center;">
+    <div style="border: 1px solid #e2e8f0; padding: 4px; border-radius: 8px;">
+      <img src="<%= qrDataUrl %>" alt="Mã QR" style="width: 140px; height: 140px; display: block;">
+    </div>
+
+    <div style="flex: 1; font-size: 0.85rem; line-height: 1.4;">
+      <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem;"><%= asset.asset_code %></div>
+      <div style="font-weight: 700; color: #334155; margin-bottom: 0.5rem;"><%= asset.name %></div>
+      <div><strong>Loại:</strong> <%= asset.category_name %></div>
+      <div><strong>Vị trí:</strong> <%= asset.location_name %></div>
+      <div><strong>Serial:</strong> <%= asset.serial_number || 'N/A' %></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px dashed #cbd5e1; font-size: 0.7rem; color: #64748b; text-align: center;">
+    Tài sản thuộc quản lý của nhà trường &bull; Nghiêm cấm bóc gỡ hoặc tráo đổi nhãn
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

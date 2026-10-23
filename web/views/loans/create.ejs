@@ -1,0 +1,60 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Đăng Ký Phiếu Mượn Thiết Bị</h1>
+    <p class="page-subtitle">Chọn tối đa 5 thiết bị đang ở trạng thái Sẵn sàng (Available)</p>
+  </div>
+  <a href="/loans" class="btn btn-secondary">&larr; Danh sách phiếu mượn</a>
+</div>
+
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+  <div class="card-body" style="padding: 1.75rem;">
+    
+    <% if (error) { %>
+      <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.25rem;">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/loans/create" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="form-group">
+        <label class="form-label" for="purpose">Mục đích sử dụng thiết bị (*)</label>
+        <textarea id="purpose" name="purpose" class="form-control" rows="3" required placeholder="Nêu rõ lý do mượn (Ví dụ: Giảng dạy lớp CNTT K18, tổ chức hội thảo, nghiên cứu NCKH...)"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="due_date">Ngày hẹn trả thiết bị (* Không quá 30 ngày)</label>
+        <input type="date" id="due_date" name="due_date" class="form-control" required min="<%= minDate %>" max="<%= maxDate %>" style="max-width: 300px;">
+      </div>
+
+      <div class="form-group" style="margin-top: 1.5rem;">
+        <label class="form-label">Chọn thiết bị cần mượn (Tối đa 5 thiết bị):</label>
+        
+        <% if (assets.length === 0) { %>
+          <p style="color: #ef4444; font-weight: 500;">Hiện tại không có thiết bị nào đang ở trạng thái Sẵn sàng (Available) để mượn.</p>
+        <% } else { %>
+          <div style="max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem;">
+            <% assets.forEach(a => { %>
+              <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.5rem; border-bottom: 1px solid #f1f5f9; cursor: pointer;">
+                <input type="checkbox" name="asset_ids" value="<%= a.id %>" style="width: 18px; height: 18px;">
+                <span class="badge badge-available" style="font-size: 0.7rem;"><%= a.asset_code %></span>
+                <span style="font-weight: 600; flex: 1;"><%= a.name %></span>
+                <span style="font-size: 0.85rem; color: #64748b;"><%= a.category_name %> &bull; <%= a.location_name %></span>
+              </label>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">Gửi Phiếu Mượn</button>
+        <a href="/loans" class="btn btn-secondary">Hủy bỏ</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

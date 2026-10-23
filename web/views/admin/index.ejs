@@ -1,0 +1,57 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Trung Tâm Quản Trị Hệ Thống</h1>
+    <p class="page-subtitle">Dành riêng cho Quản trị viên (Admin) - Quản lý danh mục, người dùng và phân quyền</p>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+  
+  <div class="card">
+    <div class="card-header" style="background: #eff6ff; color: #1e40af; font-weight: 700;">Quản Lý Tài Sản</div>
+    <div class="card-body">
+      <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Thêm mới thiết bị, cập nhật thông tin cấu hình, upload ảnh minh họa hoặc thanh lý tài sản hỏng.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <a href="/admin/assets/new" class="btn btn-primary">+ Thêm tài sản mới</a>
+        <a href="/assets" class="btn btn-secondary">Xem danh mục toàn bộ</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="background: #fdf2f8; color: #9d174d; font-weight: 700;">Quản Trị Người Dùng</div>
+    <div class="card-body">
+      <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Danh sách tài khoản nhân viên, thủ kho, kỹ thuật viên; tạo mới tài khoản và khóa/mở khóa truy cập.
+      </p>
+      <a href="/admin/users" class="btn btn-primary" style="width: 100%;">Quản lý tài khoản &rarr;</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="background: #ecfdf5; color: #065f46; font-weight: 700;">Loại Tài Sản (Categories)</div>
+    <div class="card-body">
+      <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Cấu hình phân loại thiết bị (Laptop, Máy chiếu, Mạng, Màn hình, Nội thất, Dụng cụ...).
+      </p>
+      <a href="/admin/categories" class="btn btn-primary" style="width: 100%;">Quản lý loại tài sản &rarr;</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="background: #fffbeb; color: #92400e; font-weight: 700;">Vị Trí & Kho (Locations)</div>
+    <div class="card-body">
+      <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Cấu hình danh sách kho, phòng ban, phòng họp, lab phục vụ bàn giao và lưu trữ thiết bị.
+      </p>
+      <a href="/admin/locations" class="btn btn-primary" style="width: 100%;">Quản lý vị trí &rarr;</a>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

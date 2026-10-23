@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quản Lý Vị Trí & Kho (Locations)</h1>
+    <p class="page-subtitle">Cấu hình phòng ban, kho bãi và địa điểm lưu trữ trang thiết bị</p>
+  </div>
+  <a href="/admin" class="btn btn-secondary">&larr; Về trang quản trị</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+  
+  <div class="card">
+    <div class="card-header">Danh Sách Vị Trí Hiện Có (<%= locations.length %>)</div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên vị trí / Phòng</th>
+              <th>Mô tả</th>
+              <th>Số lượng thiết bị</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% locations.forEach(l => { %>
+              <tr>
+                <td>#<%= l.id %></td>
+                <td><strong><%= l.name %></strong></td>
+                <td><%= l.description || 'Không có mô tả' %></td>
+                <td><span class="badge badge-approved"><%= l.asset_count || 0 %> thiết bị</span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="background: #f8fafc;">+ Thêm Vị Trí Mới</div>
+    <div class="card-body">
+      <form action="/admin/locations" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label class="form-label" for="name">Tên vị trí / Phòng (*)</label>
+          <input type="text" id="name" name="name" class="form-control" required placeholder="Ví dụ: Phòng họp C, Kho 2...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Mô tả chi tiết</label>
+          <textarea id="description" name="description" class="form-control" rows="3" placeholder="Tầng 2 tòa nhà C..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Thêm Vị Trí Mới</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

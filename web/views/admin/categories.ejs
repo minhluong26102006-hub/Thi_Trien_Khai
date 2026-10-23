@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quản Lý Loại Tài Sản (Categories)</h1>
+    <p class="page-subtitle">Cấu hình danh mục phân loại thiết bị cho toàn hệ thống</p>
+  </div>
+  <a href="/admin" class="btn btn-secondary">&larr; Về trang quản trị</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+  
+  <div class="card">
+    <div class="card-header">Danh Sách Loại Tài Sản Hiện Có (<%= categories.length %>)</div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên loại tài sản</th>
+              <th>Thứ tự hiển thị</th>
+              <th>Số lượng tài sản</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% categories.forEach(c => { %>
+              <tr>
+                <td>#<%= c.id %></td>
+                <td><strong><%= c.name %></strong></td>
+                <td><%= c.sort_order %></td>
+                <td><span class="badge badge-approved"><%= c.asset_count || 0 %> thiết bị</span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="background: #f8fafc;">+ Thêm Loại Tài Sản Mới</div>
+    <div class="card-body">
+      <form action="/admin/categories" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label class="form-label" for="name">Tên loại tài sản (*)</label>
+          <input type="text" id="name" name="name" class="form-control" required placeholder="Ví dụ: Máy in, Máy ảnh...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="sort_order">Thứ tự sắp xếp</label>
+          <input type="number" id="sort_order" name="sort_order" class="form-control" value="0">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Thêm Loại Mới</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

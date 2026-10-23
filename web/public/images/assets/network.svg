@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg)"/>
+  <!-- Rack switch -->
+  <rect x="50" y="105" width="300" height="75" rx="6" fill="#334155" stroke="url(#accent)" stroke-width="3"/>
+  <!-- Ports -->
+  <g fill="#0f172a" stroke="#10b981" stroke-width="1.5">
+    <rect x="75" y="125" width="22" height="18" rx="2"/>
+    <rect x="105" y="125" width="22" height="18" rx="2"/>
+    <rect x="135" y="125" width="22" height="18" rx="2"/>
+    <rect x="165" y="125" width="22" height="18" rx="2"/>
+    <rect x="195" y="125" width="22" height="18" rx="2"/>
+    <rect x="225" y="125" width="22" height="18" rx="2"/>
+  </g>
+  <!-- Status LEDs -->
+  <circle cx="75" cy="115" r="3" fill="#34d399"/>
+  <circle cx="105" cy="115" r="3" fill="#34d399"/>
+  <circle cx="135" cy="115" r="3" fill="#34d399"/>
+  <circle cx="165" cy="115" r="3" fill="#fbbf24"/>
+  <circle cx="195" cy="115" r="3" fill="#34d399"/>
+  <circle cx="225" cy="115" r="3" fill="#34d399"/>
+  <!-- Uplink SFP -->
+  <rect x="280" y="123" width="45" height="22" rx="2" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+  <text x="200" y="260" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="bold" font-size="20" fill="#34d399">THIẾT BỊ MẠNG</text>
+</svg>

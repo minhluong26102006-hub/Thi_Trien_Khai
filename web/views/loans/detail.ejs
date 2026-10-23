@@ -1,0 +1,156 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+      <span class="badge badge-<%= loan.status %>" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;"><%= loan.status %></span>
+      <span style="font-size: 1.25rem; font-weight: 800; color: #2563eb;"><%= loan.loan_code %></span>
+    </div>
+    <p class="page-subtitle">Ngày gửi yêu cầu: <%= formatDateTime(loan.requested_at) %></p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <!-- Employee cancel action -->
+    <% if ((currentUser.role === 'employee' && loan.user_id === currentUser.id) || currentUser.role === 'admin') { %>
+      <% if (loan.status === 'pending' || loan.status === 'approved') { %>
+        <form action="/loans/<%= loan.id %>/cancel" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy phiếu mượn này?');">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-danger">Hủy phiếu mượn</button>
+        </form>
+      <% } %>
+    <% } %>
+
+    <!-- Manager & Admin Actions -->
+    <% if (currentUser.role === 'manager' || currentUser.role === 'admin') { %>
+      <% if (loan.status === 'pending') { %>
+        <form action="/loans/<%= loan.id %>/approve" method="POST" style="display: inline;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-success">&#10003; Duyệt phiếu</button>
+        </form>
+      <% } %>
+
+      <% if (loan.status === 'approved' || loan.status === 'pending') { %>
+        <form action="/loans/<%= loan.id %>/handover" method="POST" style="display: inline;" onsubmit="return confirm('Xác nhận bàn giao thiết bị cho người mượn?');">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-primary">&#128230; Bàn giao thiết bị</button>
+        </form>
+      <% } %>
+    <% } %>
+
+    <a href="/loans" class="btn btn-secondary">&larr; Danh sách phiếu</a>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Loan info -->
+  <div class="card">
+    <div class="card-header">Thông Tin Phiếu Mượn</div>
+    <div class="card-body">
+      <table class="table" style="font-size: 0.95rem;">
+        <tr><th style="width: 35%;">Người mượn</th><td><strong><%= loan.borrower_name %></strong></td></tr>
+        <tr><th>Đơn vị</th><td><%= loan.borrower_department %></td></tr>
+        <tr><th>Email liên hệ</th><td><%= loan.borrower_email %></td></tr>
+        <tr><th>Mục đích</th><td><%= loan.purpose %></td></tr>
+        <tr><th>Hạn trả dự kiến</th><td><strong style="color: #2563eb;"><%= formatDate(loan.due_date) %></strong></td></tr>
+        <tr><th>Người duyệt</th><td><%= loan.approver_name || 'Chưa duyệt' %></td></tr>
+        <tr><th>Ngày bàn giao</th><td><%= formatDateTime(loan.borrowed_at) %></td></tr>
+        <tr><th>Người nhận trả</th><td><%= loan.receiver_name || 'Chưa nhận trả' %></td></tr>
+        <tr><th>Ngày trả thực tế</th><td><%= formatDateTime(loan.returned_at) %></td></tr>
+        <% if (loan.reject_reason) { %>
+          <tr><th>Lý do từ chối</th><td style="color: #dc2626;"><%= loan.reject_reason %></td></tr>
+        <% } %>
+      </table>
+    </div>
+  </div>
+
+  <!-- Rejection Form if pending and manager -->
+  <% if ((currentUser.role === 'manager' || currentUser.role === 'admin') && loan.status === 'pending') { %>
+    <div class="card" style="border: 1px solid #fca5a5;">
+      <div class="card-header" style="background: #fee2e2; color: #991b1b;">Từ Chối Phiếu Mượn</div>
+      <div class="card-body">
+        <form action="/loans/<%= loan.id %>/reject" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label class="form-label" for="reject_reason">Lý do từ chối (*)</label>
+            <textarea id="reject_reason" name="reject_reason" class="form-control" rows="3" required placeholder="Nhập lý do từ chối (Ví dụ: Thiết bị cần ưu tiên cho kỳ thi, thông tin mượn chưa rõ ràng...)"></textarea>
+          </div>
+          <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Return Form if borrowed and manager -->
+  <% if ((currentUser.role === 'manager' || currentUser.role === 'admin') && loan.status === 'borrowed') { %>
+    <div class="card" style="border: 1px solid #86efac;">
+      <div class="card-header" style="background: #dcfce7; color: #166534;">Xử Lý Nhận Trả Thiết Bị</div>
+      <div class="card-body">
+        <form action="/loans/<%= loan.id %>/return" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          
+          <p style="font-size: 0.9rem; color: #475569; margin-bottom: 1rem;">
+            Kiểm tra tình trạng từng thiết bị khi nhận lại. Nếu có thiết bị hỏng, tích chọn ô tương ứng để hệ thống tự động chuyển sang chế độ Bảo Trì:
+          </p>
+
+          <% items.forEach(item => { %>
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem;">
+              <div style="font-weight: 700; color: #0f172a; margin-bottom: 0.35rem;">
+                <%= item.asset_code %> - <%= item.asset_name %>
+              </div>
+              <div class="form-group" style="margin-bottom: 0.5rem;">
+                <input type="text" name="conditions[<%= item.asset_id %>]" class="form-control" placeholder="Tình trạng khi nhận lại..." value="Bình thường, đầy đủ phụ kiện">
+              </div>
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #dc2626; cursor: pointer;">
+                <input type="checkbox" name="damaged_assets" value="<%= item.asset_id %>">
+                <strong>Thiết bị bị hư hỏng / cần bảo trì sửa chữa</strong>
+              </label>
+            </div>
+          <% }) %>
+
+          <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 0.5rem;">
+            Xác Nhận Nhận Trả Thiết Bị
+          </button>
+        </form>
+      </div>
+    </div>
+  <% } %>
+
+</div>
+
+<!-- Items in this loan -->
+<div class="card">
+  <div class="card-header">Danh Sách Thiết Bị Trong Phiếu Mượn</div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Mã tài sản</th>
+            <th>Tên thiết bị</th>
+            <th>Loại</th>
+            <th>Vị trí</th>
+            <th>Tình trạng khi giao</th>
+            <th>Tình trạng khi trả</th>
+            <th>Trạng thái hiện tại</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(item => { %>
+            <tr>
+              <td><strong><a href="/assets/<%= item.asset_id %>"><%= item.asset_code %></a></strong></td>
+              <td><%= item.asset_name %></td>
+              <td><%= item.category_name %></td>
+              <td><%= item.location_name %></td>
+              <td><%= item.condition_out || 'N/A' %></td>
+              <td><%= item.condition_returned || 'Chưa trả' %></td>
+              <td><span class="badge badge-<%= item.current_asset_status %>"><%= item.current_asset_status %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

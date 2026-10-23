@@ -1,0 +1,223 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Báo Cáo Chỉ Số KPI & Khấu Hao Tài Sản</h1>
+    <p class="page-subtitle">Tổng quan năng suất vận hành, tỷ lệ sử dụng thiết bị và giá trị tài sản khấu hao</p>
+  </div>
+  <button onclick="window.print()" class="btn btn-secondary no-print">&#128438; In Báo Cáo</button>
+</div>
+
+<!-- 5 KPI Key Metric Cards -->
+<div class="kpi-grid">
+  
+  <div class="kpi-card">
+    <div class="kpi-title">Tổng Số Tài Sản</div>
+    <div class="kpi-val"><%= kpi.totalAssets %></div>
+    <div class="kpi-sub">
+      Sẵn sàng: <strong style="color: #059669;"><%= kpi.availableCount %></strong> &bull; Thanh lý: <%= kpi.retiredCount %>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Tỷ Lệ Đang Sử Dụng</div>
+    <div class="kpi-val" style="color: #2563eb;"><%= kpi.borrowedRate %>%</div>
+    <div class="kpi-sub">
+      Số lượng đang mượn: <strong><%= kpi.borrowedCount %></strong> thiết bị
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Phiếu Mượn Quá Hạn</div>
+    <div class="kpi-val" style="color: <%= kpi.overdueCount > 0 ? '#dc2626' : '#059669' %>;">
+      <%= kpi.overdueCount %>
+    </div>
+    <div class="kpi-sub">
+      <% if (kpi.overdueCount > 0) { %>
+        <a href="/loans/overdue" style="color: #dc2626; font-weight: 700;">Xem chi tiết quá hạn &rarr;</a>
+      <% } else { %>
+        Không có phiếu quá hạn
+      <% } %>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Đang Bảo Trì / Sửa Chữa</div>
+    <div class="kpi-val" style="color: #ea580c;"><%= kpi.maintenanceCount %></div>
+    <div class="kpi-sub">
+      <a href="/maintenance" style="color: #ea580c; font-weight: 600;">Xem tiến độ bảo dưỡng &rarr;</a>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-title">Tổng Giá Trị Còn Lại</div>
+    <div class="kpi-val" style="font-size: 1.5rem; color: #059669;">
+      <%= formatCurrency(kpi.totalRemainingValue) %>
+    </div>
+    <div class="kpi-sub">
+      Nguyên giá: <%= formatCurrency(kpi.totalOriginalValue) %>
+    </div>
+  </div>
+
+</div>
+
+<!-- 2 Column Layout for Charts and Top Borrowed -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Category Distribution with CSS / SVG Charts -->
+  <div class="card">
+    <div class="card-header">Phân Bố Tài Sản Theo Loại (Categories)</div>
+    <div class="card-body">
+      <div class="chart-bar-wrap">
+        <% categoryDistribution.forEach(cat => { %>
+          <% 
+            const percent = kpi.totalAssets > 0 ? Math.round((cat.asset_count / kpi.totalAssets) * 100) : 0;
+          %>
+          <div class="chart-bar-row">
+            <div class="chart-bar-label"><%= cat.name %></div>
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill" style="width: <%= Math.max(8, percent) %>%;">
+                <%= cat.asset_count %>
+              </div>
+            </div>
+            <div style="width: 45px; text-align: right; font-size: 0.8rem; color: #64748b;">
+              <%= percent %>%
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asset Status Breakdown -->
+  <div class="card">
+    <div class="card-header">Cơ Cấu Tình Trạng Tài Sản</div>
+    <div class="card-body">
+      <div class="chart-bar-wrap">
+        
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">Sẵn sàng (Available)</div>
+          <div class="chart-bar-track">
+            <div class="chart-bar-fill" style="background: #10b981; width: <%= kpi.totalAssets > 0 ? Math.max(8, Math.round((kpi.availableCount / kpi.totalAssets) * 100)) : 0 %>%;">
+              <%= kpi.availableCount %>
+            </div>
+          </div>
+          <div style="width: 45px; text-align: right; font-size: 0.8rem; color: #64748b;">
+            <%= kpi.totalAssets > 0 ? Math.round((kpi.availableCount / kpi.totalAssets) * 100) : 0 %>%
+          </div>
+        </div>
+
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">Đang mượn (Borrowed)</div>
+          <div class="chart-bar-track">
+            <div class="chart-bar-fill" style="background: #2563eb; width: <%= kpi.totalAssets > 0 ? Math.max(8, Math.round((kpi.borrowedCount / kpi.totalAssets) * 100)) : 0 %>%;">
+              <%= kpi.borrowedCount %>
+            </div>
+          </div>
+          <div style="width: 45px; text-align: right; font-size: 0.8rem; color: #64748b;">
+            <%= kpi.totalAssets > 0 ? Math.round((kpi.borrowedCount / kpi.totalAssets) * 100) : 0 %>%
+          </div>
+        </div>
+
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">Bảo trì (Maintenance)</div>
+          <div class="chart-bar-track">
+            <div class="chart-bar-fill" style="background: #f59e0b; width: <%= kpi.totalAssets > 0 ? Math.max(8, Math.round((kpi.maintenanceCount / kpi.totalAssets) * 100)) : 0 %>%;">
+              <%= kpi.maintenanceCount %>
+            </div>
+          </div>
+          <div style="width: 45px; text-align: right; font-size: 0.8rem; color: #64748b;">
+            <%= kpi.totalAssets > 0 ? Math.round((kpi.maintenanceCount / kpi.totalAssets) * 100) : 0 %>%
+          </div>
+        </div>
+
+        <div class="chart-bar-row">
+          <div class="chart-bar-label">Thanh lý (Retired)</div>
+          <div class="chart-bar-track">
+            <div class="chart-bar-fill" style="background: #64748b; width: <%= kpi.totalAssets > 0 ? Math.max(8, Math.round((kpi.retiredCount / kpi.totalAssets) * 100)) : 0 %>%;">
+              <%= kpi.retiredCount %>
+            </div>
+          </div>
+          <div style="width: 45px; text-align: right; font-size: 0.8rem; color: #64748b;">
+            <%= kpi.totalAssets > 0 ? Math.round((kpi.retiredCount / kpi.totalAssets) * 100) : 0 %>%
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Tables: Top Borrowed Assets & Monthly Maintenance Cost -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem;">
+  
+  <div class="card">
+    <div class="card-header">Top 5 Thiết Bị Được Mượn Nhiều Nhất</div>
+    <div class="card-body" style="padding: 0;">
+      <% if (topBorrowed.length === 0) { %>
+        <p style="padding: 1.5rem; text-align: center; color: #64748b;">Chưa có dữ liệu mượn thiết bị.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Tên thiết bị</th>
+                <th>Phân loại</th>
+                <th>Lượt mượn</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% topBorrowed.forEach((item, idx) => { %>
+                <tr>
+                  <td><strong><%= item.asset_code %></strong></td>
+                  <td><%= item.name %></td>
+                  <td><%= item.category_name %></td>
+                  <td>
+                    <span class="badge badge-approved" style="font-size: 0.85rem;">
+                      <%= item.borrow_count %> lượt
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Chi Phí Bảo Trì & Sửa Chữa Theo Tháng</div>
+    <div class="card-body" style="padding: 0;">
+      <% if (monthlyMaintenance.length === 0) { %>
+        <p style="padding: 1.5rem; text-align: center; color: #64748b;">Chưa có chi phí bảo trì phát sinh.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Tháng</th>
+                <th>Số lượt bảo dưỡng</th>
+                <th>Tổng chi phí</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% monthlyMaintenance.forEach(m => { %>
+                <tr>
+                  <td><strong><%= m.month_label %></strong></td>
+                  <td><%= m.logs_count %> lượt</td>
+                  <td><strong style="color: #059669;"><%= formatCurrency(m.total_cost) %></strong></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

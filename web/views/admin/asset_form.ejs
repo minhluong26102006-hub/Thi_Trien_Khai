@@ -1,0 +1,118 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title"><%= asset ? 'Chỉnh Sửa Tài Sản: ' + asset.asset_code : 'Thêm Tài Sản & Thiết Bị Mới' %></h1>
+    <p class="page-subtitle">Nhập thông tin tài sản, kiểm tra định dạng và upload ảnh minh họa</p>
+  </div>
+  <a href="/assets" class="btn btn-secondary">&larr; Danh mục tài sản</a>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+  <div class="card-body" style="padding: 2rem;">
+    
+    <% if (error) { %>
+      <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.25rem;">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="<%= asset ? '/admin/assets/' + asset.id + '/edit' : '/admin/assets/new' %>?_csrf=<%= csrfToken %>" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="asset_code">Mã tài sản (* Không được trùng)</label>
+          <input type="text" id="asset_code" name="asset_code" class="form-control" required
+                 value="<%= asset ? asset.asset_code : '' %>"
+                 <%= asset ? 'readonly style="background-color: #f1f5f9;"' : '' %>
+                 placeholder="Ví dụ: TS-LAP-007">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="serial_number">Số Serial thiết bị</label>
+          <input type="text" id="serial_number" name="serial_number" class="form-control"
+                 value="<%= asset && asset.serial_number ? asset.serial_number : '' %>"
+                 placeholder="Ví dụ: SN-9988223">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="name">Tên tài sản / Thiết bị (*)</label>
+        <input type="text" id="name" name="name" class="form-control" required
+               value="<%= asset ? asset.name : '' %>"
+               placeholder="Ví dụ: Laptop Dell Precision 5560 i7/32GB/1TB">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="category_id">Loại tài sản (*)</label>
+          <select id="category_id" name="category_id" class="form-control" required>
+            <option value="">-- Chọn loại tài sản --</option>
+            <% categories.forEach(c => { %>
+              <option value="<%= c.id %>" <%= asset && asset.category_id === c.id ? 'selected' : '' %>>
+                <%= c.name %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="location_id">Vị trí lưu trữ (*)</label>
+          <select id="location_id" name="location_id" class="form-control" required>
+            <option value="">-- Chọn vị trí lưu trữ --</option>
+            <% locations.forEach(l => { %>
+              <option value="<%= l.id %>" <%= asset && asset.location_id === l.id ? 'selected' : '' %>>
+                <%= l.name %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="purchase_date">Ngày đưa vào sử dụng (*)</label>
+          <input type="date" id="purchase_date" name="purchase_date" class="form-control" required
+                 value="<%= asset ? new Date(asset.purchase_date).toISOString().split('T')[0] : '' %>">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="purchase_price">Giá mua ban đầu (VNĐ, >= 0) (*)</label>
+          <input type="number" id="purchase_price" name="purchase_price" class="form-control" required min="0"
+                 value="<%= asset ? asset.purchase_price : '' %>" placeholder="15000000">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="useful_life_years">Hạn khấu hao (Năm, > 0) (*)</label>
+          <input type="number" id="useful_life_years" name="useful_life_years" class="form-control" required min="1" max="50"
+                 value="<%= asset ? asset.useful_life_years : '3' %>" placeholder="3">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="image">Tải lên ảnh tài sản (PNG, JPG, WEBP &bull; Tối đa 2 MB)</label>
+        <input type="file" id="image" name="image" class="form-control" accept="image/png,image/jpeg,image/webp">
+        <% if (asset && asset.image_path) { %>
+          <small style="color: #64748b; margin-top: 0.25rem; display: block;">
+            Ảnh hiện tại: <code><%= asset.image_path %></code> (Để trống nếu không muốn đổi ảnh)
+          </small>
+        <% } %>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="note">Ghi chú bổ sung</label>
+        <textarea id="note" name="note" class="form-control" rows="3" placeholder="Thông tin thêm về hiện trạng hoặc phụ kiện đi kèm..."><%= asset && asset.note ? asset.note : '' %></textarea>
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+          <%= asset ? 'Lưu Thay Đổi' : 'Thêm Tài Sản' %>
+        </button>
+        <a href="/assets" class="btn btn-secondary">Hủy bỏ</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,156 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+      <span class="badge badge-<%= asset.status %>" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;"><%= asset.status %></span>
+      <span style="font-size: 1.1rem; font-weight: 700; color: #2563eb;"><%= asset.asset_code %></span>
+    </div>
+    <h1 class="page-title"><%= asset.name %></h1>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <% if (currentUser.role === 'manager' || currentUser.role === 'admin') { %>
+      <a href="/assets/<%= asset.id %>/label" class="btn btn-secondary">In nhãn & QR Code</a>
+      <a href="/maintenance/create?asset_id Dark=<%= asset.id %>" class="btn btn-warning">Lập phiếu bảo trì</a>
+    <% } %>
+
+    <% if (currentUser.role === 'admin') { %>
+      <a href="/admin/assets/<%= asset.id %>/edit" class="btn btn-secondary">Chỉnh sửa</a>
+      <% if (asset.status !== 'retired' && asset.status !== 'borrowed') { %>
+        <form action="/admin/assets/<%= asset.id %>/retire" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn thanh lý tài sản này không?');" style="display: inline;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-danger">Thanh lý tài sản</button>
+        </form>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Asset Info Card -->
+  <div class="card">
+    <div class="card-header">Thông Tin Chi Tiết Thiết Bị</div>
+    <div class="card-body">
+      <div style="text-align: center; margin-bottom: 1.25rem; background: #0f172a; border-radius: 8px; padding: 1rem;">
+        <img src="<%= asset.image_path || '/images/assets/laptop.svg' %>" alt="<%= asset.name %>" style="max-height: 180px; object-fit: contain;">
+      </div>
+
+      <table class="table" style="font-size: 0.95rem;">
+        <tr><th style="width: 40%;">Mã tài sản</th><td><strong><%= asset.asset_code %></strong></td></tr>
+        <tr><th>Loại tài sản</th><td><%= asset.category_name %></td></tr>
+        <tr><th>Vị trí hiện tại</th><td><%= asset.location_name %></td></tr>
+        <tr><th>Số Serial</th><td><%= asset.serial_number || 'Chưa cập nhật' %></td></tr>
+        <tr><th>Ngày đưa vào dùng</th><td><%= formatDate(asset.purchase_date) %></td></tr>
+        <tr><th>Giá mua ban đầu</th><td><strong style="color: #059669;"><%= formatCurrency(asset.purchase_price) %></strong></td></tr>
+        <tr><th>Hạn khấu hao</th><td><%= asset.useful_life_years %> năm</td></tr>
+        <tr><th>Ghi chú</th><td><%= asset.note || 'Không có ghi chú' %></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Depreciation Card -->
+  <div class="card">
+    <div class="card-header">Khấu Hao Tài Sản (Phương Pháp Đường Thẳng)</div>
+    <div class="card-body">
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.25rem;">Giá trị còn lại hiện tại (Ước tính)</div>
+        <div style="font-size: 2.2rem; font-weight: 800; color: #2563eb;">
+          <%= formatCurrency(depreciation.remainingValue) %>
+        </div>
+        <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">
+          Đã sử dụng: <strong><%= depreciation.yearsUsed %> năm</strong> / <%= asset.useful_life_years %> năm định mức
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
+          <span>Tỷ lệ đã hao mòn</span>
+          <strong><%= depreciation.depreciationPercent %>%</strong>
+        </div>
+        <div style="background: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden;">
+          <div style="background: #ef4444; width: <%= depreciation.depreciationPercent %>%; height: 100%;"></div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: #475569; background: #fffbeb; border: 1px solid #fef3c7; padding: 0.75rem 1rem; border-radius: 6px;">
+        <strong>Công thức tính:</strong> Giá trị còn lại = Giá mua &times; max(0, 1 &minus; Số năm đã dùng / Hạn khấu hao).
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Loan History & Maintenance History -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+  
+  <div class="card">
+    <div class="card-header">Lịch Sử Mượn Thiết Bị</div>
+    <div class="card-body" style="padding: 0;">
+      <% if (loans.length === 0) { %>
+        <p style="padding: 1.5rem; text-align: center; color: #64748b;">Chưa có lịch sử mượn cho tài sản này.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Mã phiếu</th>
+                <th>Người mượn</th>
+                <th>Ngày mượn</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% loans.forEach(l => { %>
+                <tr>
+                  <td><strong><%= l.loan_code %></strong></td>
+                  <td><%= l.borrower_name %></td>
+                  <td><%= formatDate(l.borrowed_at || l.requested_at) %></td>
+                  <td><span class="badge badge-<%= l.status %>"><%= l.status %></span></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Lịch Sử Bảo Trì & Sửa Chữa</div>
+    <div class="card-body" style="padding: 0;">
+      <% if (maintenanceLogs.length === 0) { %>
+        <p style="padding: 1.5rem; text-align: center; color: #64748b;">Chưa có bản ghi bảo trì nào.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Loại</th>
+                <th>Nội dung</th>
+                <th>Chi phí</th>
+                <th>Bắt đầu</th>
+                <th>Kỹ thuật viên</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% maintenanceLogs.forEach(m => { %>
+                <tr>
+                  <td><span class="badge badge-<%= m.finished_at ? 'approved' : 'maintenance' %>"><%= m.type %></span></td>
+                  <td><%= m.description %></td>
+                  <td><%= formatCurrency(m.cost) %></td>
+                  <td><%= formatDate(m.started_at) %></td>
+                  <td><%= m.technician_name %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

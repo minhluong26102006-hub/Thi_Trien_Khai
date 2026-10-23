@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg)"/>
+  <rect x="70" y="45" width="260" height="160" rx="8" fill="#334155" stroke="url(#accent)" stroke-width="3"/>
+  <rect x="85" y="60" width="230" height="130" rx="4" fill="#0f172a"/>
+  <!-- screen content -->
+  <circle cx="200" cy="120" r="28" fill="#1e293b"/>
+  <path d="M190 120 L198 128 L214 112" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- laptop base -->
+  <path d="M40 210 L360 210 L340 230 L60 230 Z" fill="#64748b"/>
+  <rect x="170" y="212" width="60" height="6" rx="3" fill="#94a3b8"/>
+  <text x="200" y="270" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="bold" font-size="20" fill="#38bdf8">LAPTOP &amp; MÁY TÍNH</text>
+</svg>

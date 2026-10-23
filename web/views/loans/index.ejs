@@ -1,0 +1,72 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quản Lý Phiếu Mượn Thiết Bị</h1>
+    <p class="page-subtitle">Theo dõi quy trình đăng ký, xét duyệt, bàn giao và nhận trả thiết bị</p>
+  </div>
+  <a href="/loans/create" class="btn btn-primary">+ Tạo phiếu mượn mới</a>
+</div>
+
+<!-- Status Filters -->
+<div class="card" style="margin-bottom: 1.5rem;">
+  <div class="card-body" style="padding: 0.75rem 1rem;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="/loans" class="btn btn-sm <%= currentStatus === 'all' ? 'btn-primary' : 'btn-secondary' %>">Tất cả</a>
+      <a href="/loans?status=pending" class="btn btn-sm <%= currentStatus === 'pending' ? 'btn-primary' : 'btn-secondary' %>">Chờ duyệt (Pending)</a>
+      <a href="/loans?status=approved" class="btn btn-sm <%= currentStatus === 'approved' ? 'btn-primary' : 'btn-secondary' %>">Đã duyệt (Approved)</a>
+      <a href="/loans?status=borrowed" class="btn btn-sm <%= currentStatus === 'borrowed' ? 'btn-primary' : 'btn-secondary' %>">Đang mượn (Borrowed)</a>
+      <a href="/loans?status=returned" class="btn btn-sm <%= currentStatus === 'returned' ? 'btn-primary' : 'btn-secondary' %>">Đã trả (Returned)</a>
+      <a href="/loans?status=rejected" class="btn btn-sm <%= currentStatus === 'rejected' ? 'btn-primary' : 'btn-secondary' %>">Đã từ chối (Rejected)</a>
+      <a href="/loans?status=cancelled" class="btn btn-sm <%= currentStatus === 'cancelled' ? 'btn-primary' : 'btn-secondary' %>">Đã hủy (Cancelled)</a>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding: 0;">
+    <% if (loans.length === 0) { %>
+      <div style="padding: 3rem; text-align: center; color: #64748b;">
+        Không tìm thấy phiếu mượn nào trong danh mục này.
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Mã phiếu</th>
+              <th>Người mượn</th>
+              <th>Mục đích</th>
+              <th>Số thiết bị</th>
+              <th>Ngày hẹn trả</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% loans.forEach(l => { %>
+              <tr>
+                <td><strong><%= l.loan_code %></strong></td>
+                <td>
+                  <div><%= l.borrower_name %></div>
+                  <small style="color: #64748b;"><%= l.department %></small>
+                </td>
+                <td style="max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <%= l.purpose %>
+                </td>
+                <td><strong><%= l.item_count || 1 %></strong> thiết bị</td>
+                <td><%= formatDate(l.due_date) %></td>
+                <td><span class="badge badge-<%= l.status %>"><%= l.status %></span></td>
+                <td>
+                  <a href="/loans/<%= l.id %>" class="btn btn-secondary btn-sm">Chi tiết &rarr;</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

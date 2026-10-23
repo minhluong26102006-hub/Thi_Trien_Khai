@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %>Quản lý Tài sản & Thiết bị</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="main-header">
+    <div class="header-container">
+      <a href="/assets" class="brand-link">
+        <span class="brand-badge">ASSET-OS</span>
+        <span>Quản Lý Thiết Bị</span>
+      </a>
+
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+        <nav class="main-nav">
+          <a href="/assets" class="nav-link <%= (typeof currentPath !== 'undefined' && currentPath.startsWith('/assets') && !currentPath.includes('/label')) ? 'active' : '' %>">Danh Mục Tài Sản</a>
+          <a href="/loans" class="nav-link <%= (typeof currentPath !== 'undefined' && currentPath.startsWith('/loans') && !currentPath.includes('/overdue')) ? 'active' : '' %>">Phiếu Mượn</a>
+
+          <% if (currentUser.role === 'manager' || currentUser.role === 'admin') { %>
+            <a href="/loans/overdue" class="nav-link <%= (typeof currentPath !== 'undefined' && currentPath.includes('/overdue')) ? 'active' : '' %>">Quá Hạn</a>
+            <a href="/maintenance" class="nav-link <%= (typeof currentPath !== 'undefined' && currentPath.startsWith('/maintenance')) ? 'active' : '' %>">Bảo Trì</a>
+            <a href="/kpi" class="nav-link <%= (typeof currentPath !== 'undefined' && currentPath.startsWith('/kpi')) ? 'active' : '' %>">Báo Cáo KPI</a>
+          <% } %>
+
+          <% if (currentUser.role === 'admin') { %>
+            <a href="/admin" class="nav-link <%= (typeof currentPath !== 'undefined' && currentPath.startsWith('/admin')) ? 'active' : '' %>">Quản Trị</a>
+          <% } %>
+
+          <div class="user-badge-wrap">
+            <span class="user-name"><%= currentUser.full_name %></span>
+            <span class="role-pill role-<%= currentUser.role %>"><%= currentUser.role %></span>
+            <form action="/auth/logout" method="POST" style="display: inline;">
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+              <button type="submit" class="btn-logout">Đăng xuất</button>
+            </form>
+          </div>
+        </nav>
+      <% } else { %>
+        <nav class="main-nav">
+          <a href="/auth/login" class="nav-link">Đăng Nhập</a>
+          <a href="/auth/register" class="nav-link">Đăng Ký</a>
+        </nav>
+      <% } %>
+    </div>
+  </header>
+
+  <main class="main-content">

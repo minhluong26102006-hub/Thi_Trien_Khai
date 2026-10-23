@@ -1,0 +1,131 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Danh Mục Tài Sản & Thiết Bị</h1>
+    <p class="page-subtitle">Theo dõi, quản lý vòng đời và tra cứu thông tin thiết bị đơn vị</p>
+  </div>
+  <% if (currentUser && currentUser.role === 'admin') { %>
+    <a href="/admin/assets/new" class="btn btn-primary">+ Thêm tài sản mới</a>
+  <% } %>
+</div>
+
+<!-- Search & Filter Card -->
+<div class="card" style="margin-bottom: 1.5rem;">
+  <div class="card-body">
+    <form action="/assets" method="GET">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end;">
+        
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="q">Tìm kiếm</label>
+          <input type="text" id="q" name="q" class="form-control" placeholder="Tên hoặc mã tài sản..." value="<%= filters.q || '' %>">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="category">Loại tài sản</label>
+          <select id="category" name="category" class="form-control">
+            <option value="">-- Tất cả loại --</option>
+            <% categories.forEach(c => { %>
+              <option value="<%= c.id %>" <%= filters.category == c.id ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="location">Vị trí lưu trữ</label>
+          <select id="location" name="location" class="form-control">
+            <option value="">-- Tất cả vị trí --</option>
+            <% locations.forEach(l => { %>
+              <option value="<%= l.id %>" <%= filters.location == l.id ? 'selected' : '' %>><%= l.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="status">Tình trạng</label>
+          <select id="status" name="status" class="form-control">
+            <option value="">-- Tất cả tình trạng --</option>
+            <option value="available" <%= filters.status === 'available' ? 'selected' : '' %>>Sẵn sàng (Available)</option>
+            <option value="borrowed" <%= filters.status === 'borrowed' ? 'selected' : '' %>>Đang mượn (Borrowed)</option>
+            <option value="maintenance" <%= filters.status === 'maintenance' ? 'selected' : '' %>>Đang bảo trì (Maintenance)</option>
+            <option value="retired" <%= filters.status === 'retired' ? 'selected' : '' %>>Đã thanh lý (Retired)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="sort">Sắp xếp theo</label>
+          <select id="sort" name="sort" class="form-control">
+            <option value="">Mặc định (Mới nhất)</option>
+            <option value="name_asc" <%= filters.sort === 'name_asc' ? 'selected' : '' %>>Tên (A - Z)</option>
+            <option value="name_desc" <%= filters.sort === 'name_desc' ? 'selected' : '' %>>Tên (Z - A)</option>
+            <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Giá mua tăng dần</option>
+            <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Giá mua giảm dần</option>
+            <option value="date_desc" <%= filters.sort === 'date_desc' ? 'selected' : '' %>>Ngày mua gần nhất</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Lọc dữ liệu</button>
+          <a href="/assets" class="btn btn-secondary">Đặt lại</a>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Assets Results Grid -->
+<% if (assets.length === 0) { %>
+  <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+    <p style="font-size: 1.1rem; color: #64748b;">Không tìm thấy tài sản nào phù hợp với điều kiện tìm kiếm.</p>
+  </div>
+<% } else { %>
+  <div class="asset-grid">
+    <% assets.forEach(a => { %>
+      <div class="card asset-card">
+        <div class="asset-img-wrap">
+          <img src="<%= a.image_path || '/images/assets/laptop.svg' %>" alt="<%= a.name %>" class="asset-img">
+          <div class="asset-card-status">
+            <span class="badge badge-<%= a.status %>"><%= a.status %></span>
+          </div>
+        </div>
+
+        <div class="asset-card-body">
+          <span class="asset-code"><%= a.asset_code %></span>
+          <h3 class="asset-name">
+            <a href="/assets/<%= a.id %>"><%= a.name %></a>
+          </h3>
+
+          <div class="asset-meta">
+            <div><strong>Loại:</strong> <%= a.category_name %></div>
+            <div><strong>Vị trí:</strong> <%= a.location_name %></div>
+            <div><strong>Ngày mua:</strong> <%= formatDate(a.purchase_date) %></div>
+          </div>
+
+          <div class="asset-price">
+            <span><%= formatCurrency(a.purchase_price) %></span>
+            <a href="/assets/<%= a.id %>" class="btn btn-secondary btn-sm">Xem chi tiết &rarr;</a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <!-- Pagination -->
+  <% if (pagination.totalPages > 1) { %>
+    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
+      <% for (let p = 1; p <= pagination.totalPages; p++) { %>
+        <% 
+          const queryParams = new URLSearchParams(filters);
+          queryParams.set('page', p);
+        %>
+        <a href="/assets?<%= queryParams.toString() %>"
+           class="btn <%= pagination.currentPage === p ? 'btn-primary' : 'btn-secondary' %> btn-sm">
+          <%= p %>
+        </a>
+      <% } %>
+    </div>
+  <% } %>
+<% } %>
+
+<%- include('../partials/footer') %>

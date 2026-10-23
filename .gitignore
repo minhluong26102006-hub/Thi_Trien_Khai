@@ -1,0 +1,31 @@
+# Environment variables and secrets
+.env
+*.env.local
+
+# SSL certificates and private keys
+nginx/certs/*.key
+nginx/certs/*.crt
+nginx/certs/*.pem
+
+# Dependencies
+node_modules/
+
+# Evidence and test artifacts
+evidence/
+
+# Audit files
+docs/AUDIT.md
+
+# Uploaded assets (keep .gitkeep)
+web/public/uploads/*
+!web/public/uploads/.gitkeep
+
+# Docker override and volume mounts
+docker-compose.override.yml
+*.log
+.data/
+postgres_data/
+pgadmin_data/
+prometheus_data/
+grafana_data/
+loki_data/

@@ -1,0 +1,117 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quản Lý Người Dùng & Phân Quyền</h1>
+    <p class="page-subtitle">Danh sách tài khoản hệ thống (Admin, Manager, Employee) và quản lý trạng thái kích hoạt</p>
+  </div>
+  <a href="/admin" class="btn btn-secondary">&larr; Về trang quản trị</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+  
+  <!-- Users List -->
+  <div class="card">
+    <div class="card-header">Danh Sách Tài Khoản (<%= users.length %>)</div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Họ và tên</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Đơn vị</th>
+              <th>Vai trò</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(u => { %>
+              <tr>
+                <td>#<%= u.id %></td>
+                <td><strong><%= u.full_name %></strong></td>
+                <td><code><%= u.username %></code></td>
+                <td><%= u.email %></td>
+                <td><%= u.department %></td>
+                <td><span class="role-pill role-<%= u.role %>"><%= u.role %></span></td>
+                <td>
+                  <% if (u.is_active) { %>
+                    <span class="badge badge-available">Hoạt động</span>
+                  <% } else { %>
+                    <span class="badge badge-rejected">Đã khóa</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (u.id === currentUser.id) { %>
+                    <small style="color: #94a3b8; font-style: italic;">Chính bạn</small>
+                  <% } else { %>
+                    <form action="/admin/users/<%= u.id %>/toggle-active" method="POST" style="display: inline;">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <% if (u.is_active) { %>
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Khóa tài khoản này? Người dùng sẽ không thể đăng nhập.');">Khóa</button>
+                      <% } else { %>
+                        <button type="submit" class="btn btn-success btn-sm">Mở khóa</button>
+                      <% } %>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create User Form -->
+  <div class="card">
+    <div class="card-header" style="background: #f8fafc;">+ Thêm Tài Khoản Mới</div>
+    <div class="card-body">
+      <form action="/admin/users" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label class="form-label" for="full_name">Họ và tên (*)</label>
+          <input type="text" id="full_name" name="full_name" class="form-control" required placeholder="Nguyễn Văn A">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="username">Tên đăng nhập (*)</label>
+          <input type="text" id="username" name="username" class="form-control" required placeholder="username">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Địa chỉ Email (*)</label>
+          <input type="email" id="email" name="email" class="form-control" required placeholder="user@domain.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Mật khẩu khởi tạo (*)</label>
+          <input type="password" id="password" name="password" class="form-control" required placeholder="Mật khẩu >= 6 ký tự">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="department">Đơn vị / Phòng ban (*)</label>
+          <input type="text" id="department" name="department" class="form-control" required placeholder="Phòng CNTT">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="role">Vai trò hệ thống (*)</label>
+          <select id="role" name="role" class="form-control" required>
+            <option value="employee">Employee (Nhân viên / Giảng viên)</option>
+            <option value="manager">Manager (Thủ kho / Kỹ thuật viên)</option>
+            <option value="admin">Admin (Quản trị viên toàn quyền)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Tạo Tài Khoản</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

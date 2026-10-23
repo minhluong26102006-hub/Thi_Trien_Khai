@@ -1,0 +1,67 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Lập Phiếu Bảo Trì / Sửa Chữa Thiết Bị</h1>
+    <p class="page-subtitle">Thiết bị sẽ tự động chuyển sang trạng thái Bảo trì (Maintenance)</p>
+  </div>
+  <a href="/maintenance" class="btn btn-secondary">&larr; Danh sách bảo trì</a>
+</div>
+
+<div class="card" style="max-width: 680px; margin: 0 auto;">
+  <div class="card-body" style="padding: 1.75rem;">
+    
+    <% if (error) { %>
+      <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.25rem;">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/maintenance/create" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="form-group">
+        <label class="form-label" for="asset_id">Chọn thiết bị cần bảo trì (*)</label>
+        <select id="asset_id" name="asset_id" class="form-control" required>
+          <option value="">-- Chọn thiết bị --</option>
+          <% assets.forEach(a => { %>
+            <option value="<%= a.id %>" <%= preselectedAssetId == a.id ? 'selected' : '' %>>
+              [<%= a.asset_code %>] <%= a.name %> (<%= a.status %>)
+            </option>
+          <% }) %>
+        </select>
+        <small style="color: #64748b; font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+          Lưu ý: Thiết bị đang được mượn (Borrowed) hoặc đã thanh lý (Retired) không thể đưa vào bảo trì.
+        </small>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="type">Loại hình bảo trì (*)</label>
+          <select id="type" name="type" class="form-control" required>
+            <option value="repair">Sửa chữa hư hỏng (Repair)</option>
+            <option value="inspection">Kiểm định &amp; bảo dưỡng định kỳ (Inspection)</option>
+            <option value="upgrade">Nâng cấp cấu hình / linh kiện (Upgrade)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="estimated_cost">Chi phí ước tính (VNĐ)</label>
+          <input type="number" id="estimated_cost" name="estimated_cost" class="form-control" min="0" placeholder="0" value="0">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="description">Nội dung chi tiết công việc (*)</label>
+        <textarea id="description" name="description" class="form-control" rows="4" required placeholder="Mô tả hiện tượng hư hỏng, linh kiện cần thay thế hoặc nội dung nâng cấp..."></textarea>
+      </div>
+
+      <div style="margin-top: 1.75rem; display: flex; gap: 1rem;">
+        <button type="submit" class="btn btn-warning" style="padding: 0.75rem 2rem;">Bắt Đầu Bảo Trì</button>
+        <a href="/maintenance" class="btn btn-secondary">Hủy bỏ</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

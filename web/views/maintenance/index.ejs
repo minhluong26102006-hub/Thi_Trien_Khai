@@ -1,0 +1,101 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quản Lý Bảo Trì & Sửa Chữa Thiết Bị</h1>
+    <p class="page-subtitle">Theo dõi quy trình bảo dưỡng định kỳ, sửa chữa hư hỏng và nâng cấp phần cứng</p>
+  </div>
+  <a href="/maintenance/create" class="btn btn-warning">+ Lập phiếu bảo trì mới</a>
+</div>
+
+<!-- Ongoing Maintenance Table -->
+<div class="card" style="margin-bottom: 2rem;">
+  <div class="card-header" style="background: #ffedd5; color: #9a3412;">
+    <strong>Thiết Bị Đang Trong Quá Trình Bảo Trì / Sửa Chữa (<%= ongoing.length %>)</strong>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <% if (ongoing.length === 0) { %>
+      <div style="padding: 2.5rem; text-align: center; color: #166534; font-weight: 500;">
+        Hiện không có thiết bị nào đang cần bảo trì.
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Mã tài sản</th>
+              <th>Tên thiết bị</th>
+              <th>Loại dịch vụ</th>
+              <th>Nội dung bảo trì</th>
+              <th>Thời gian bắt đầu</th>
+              <th>Kỹ thuật viên</th>
+              <th>Hoàn tất bảo trì</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% ongoing.forEach(m => { %>
+              <tr>
+                <td><strong><a href="/assets/<%= m.asset_id %>"><%= m.asset_code %></a></strong></td>
+                <td><%= m.asset_name %></td>
+                <td><span class="badge badge-maintenance"><%= m.type %></span></td>
+                <td><%= m.description %></td>
+                <td><%= formatDateTime(m.started_at) %></td>
+                <td><%= m.technician_name %></td>
+                <td>
+                  <form action="/maintenance/<%= m.id %>/finish" method="POST" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="number" name="final_cost" class="form-control" style="width: 120px; padding: 0.25rem 0.5rem;" placeholder="Chi phí..." value="<%= m.cost || 0 %>" min="0" required>
+                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Xác nhận hoàn tất bảo trì và đưa thiết bị về trạng thái Available?');">Hoàn tất</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Maintenance History Table -->
+<div class="card">
+  <div class="card-header">Lịch Sử Bảo Trì Đã Hoàn Tất</div>
+  <div class="card-body" style="padding: 0;">
+    <% if (history.length === 0) { %>
+      <div style="padding: 2rem; text-align: center; color: #64748b;">Chưa có lịch sử bảo trì.</div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Mã tài sản</th>
+              <th>Tên thiết bị</th>
+              <th>Loại</th>
+              <th>Nội dung công việc</th>
+              <th>Chi phí</th>
+              <th>Bắt đầu</th>
+              <th>Hoàn tất</th>
+              <th>Kỹ thuật viên</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% history.forEach(m => { %>
+              <tr>
+                <td><strong><a href="/assets/<%= m.asset_id %>"><%= m.asset_code %></a></strong></td>
+                <td><%= m.asset_name %></td>
+                <td><span class="badge badge-approved"><%= m.type %></span></td>
+                <td><%= m.description %></td>
+                <td><strong style="color: #059669;"><%= formatCurrency(m.cost) %></strong></td>
+                <td><%= formatDate(m.started_at) %></td>
+                <td><%= formatDate(m.finished_at) %></td>
+                <td><%= m.technician_name %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
