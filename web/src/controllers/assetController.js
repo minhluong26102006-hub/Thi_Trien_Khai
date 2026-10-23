@@ -26,25 +26,31 @@ async function getAssets(req, res) {
     const params = [];
     let paramIdx = 1;
 
-    if (q && q.trim()) {
+    if (q && q.trim() && q.trim() !== 'undefined') {
       conditions.push(`(a.name ILIKE $${paramIdx} OR a.asset_code ILIKE $${paramIdx})`);
       params.push(`%${q.trim()}%`);
       paramIdx++;
     }
 
-    if (category) {
-      conditions.push(`a.category_id = $${paramIdx}`);
-      params.push(parseInt(category, 10));
-      paramIdx++;
+    if (category && category !== 'undefined') {
+      const catId = parseInt(category, 10);
+      if (!isNaN(catId)) {
+        conditions.push(`a.category_id = $${paramIdx}`);
+        params.push(catId);
+        paramIdx++;
+      }
     }
 
-    if (location) {
-      conditions.push(`a.location_id = $${paramIdx}`);
-      params.push(parseInt(location, 10));
-      paramIdx++;
+    if (location && location !== 'undefined') {
+      const locId = parseInt(location, 10);
+      if (!isNaN(locId)) {
+        conditions.push(`a.location_id = $${paramIdx}`);
+        params.push(locId);
+        paramIdx++;
+      }
     }
 
-    if (status) {
+    if (status && status !== 'undefined') {
       conditions.push(`a.status = $${paramIdx}`);
       params.push(status);
       paramIdx++;

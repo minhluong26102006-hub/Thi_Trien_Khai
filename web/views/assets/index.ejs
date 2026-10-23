@@ -116,7 +116,11 @@
     <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
       <% for (let p = 1; p <= pagination.totalPages; p++) { %>
         <% 
-          const queryParams = new URLSearchParams(filters);
+          const cleanFilters = {};
+          Object.entries(filters).forEach(([k, v]) => {
+            if (v && v !== 'undefined') cleanFilters[k] = v;
+          });
+          const queryParams = new URLSearchParams(cleanFilters);
           queryParams.set('page', p);
         %>
         <a href="/assets?<%= queryParams.toString() %>"

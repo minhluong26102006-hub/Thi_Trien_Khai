@@ -109,7 +109,7 @@ CREATE INDEX IF NOT EXISTS idx_maintenance_logs_asset_id ON maintenance_logs(ass
 
 -- Seed Users (Bcrypt hashed from node in container)
 INSERT INTO users (id, username, email, password_hash, full_name, department, role, is_active) VALUES
-(1, 'admin', 'admin@asset.local', '$2a$10$kCmWBDwK3ZEQIZtauKLAtO.h9YNCWuRWpJR93KEHMdzQGnE0D7MXi', 'Nguyễn Văn Quản Trị', 'Phòng CNTT & Quản trị Hệ thống', 'admin', true),
+(1, 'admin', 'admin@asset.local', '$2b$10$Jn2GurDbwLvOBaZ4KdPlJOVVnKKxG8kmXDoqurDBB1byEtbhzJpqq', 'Nguyễn Văn Quản Trị', 'Phòng CNTT & Quản trị Hệ thống', 'admin', true),
 (2, 'thukho01', 'thukho01@asset.local', '$2a$10$Nrlx6rQlxa/2ozQitzm44uuUxzttLNbiFlibmyzWwXGA8oShbql2W', 'Trần Thị Thủ Kho', 'Phòng Quản lý Cơ sở Vật chất', 'manager', true),
 (3, 'kythuat01', 'kythuat01@asset.local', '$2a$10$J5C/e3iELAWqiHB8AoTsT.DAg.lPR8utfjr71UpE5FhX99aYU9Frq', 'Lê Văn Kỹ Thuật', 'Đội Kỹ thuật & Bảo trì', 'manager', true),
 (4, 'nhanvien01', 'nhanvien01@asset.local', '$2a$10$FFz7udlHMzs.kJ3OAjaoLOYypdIbjihS4lVquNU401v9Oa/HNh1jS', 'Phạm Văn Nhân Viên', 'Khoa Công nghệ Thông tin', 'employee', true),
