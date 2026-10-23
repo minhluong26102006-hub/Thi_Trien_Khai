@@ -9,6 +9,9 @@ const csrfMiddleware = require('./middlewares/csrf');
 const routes = require('./routes');
 
 const app = express();
+
+// Hide Express server header for security
+app.disable('x-powered-by');
 const PORT = process.env.PORT || 3000;
 
 // Trust proxy for proper IP extraction and cookies behind reverse proxy

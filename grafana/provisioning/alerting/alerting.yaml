@@ -1,0 +1,88 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: "Alert Sink Webhook"
+    receivers:
+      - uid: "alert-sink-webhook"
+        type: webhook
+        settings:
+          url: "http://alert-sink:9099/webhook"
+          httpMethod: POST
+        disableResolveMessage: false
+
+policies:
+  - orgId: 1
+    receiver: "Alert Sink Webhook"
+    group_by: ["alertname", "grafana_folder"]
+    group_wait: 5s
+    group_interval: 10s
+    repeat_interval: 1h
+
+groups:
+  - orgId: 1
+    name: "Security Alerts"
+    folder: "Asset Monitoring"
+    interval: 10s
+    rules:
+      - uid: "brute-force-login-rule"
+        title: "Asset - Brute force login"
+        condition: "C"
+        data:
+          - refId: "A"
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: "loki"
+            model:
+              editorMode: "code"
+              expr: "sum(count_over_time({job=\"webapp\"} |= \"LOGIN_FAILED\" [1m]))"
+              queryType: "range"
+              refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              datasource:
+                name: "Expression"
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "A"
+              reducer: "last"
+              refId: "B"
+              type: "reduce"
+          - refId: "C"
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [5]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["C"]
+                  reducer:
+                    params: []
+                    type: "last"
+                  type: "query"
+              datasource:
+                name: "Expression"
+                type: "__expr__"
+                uid: "__expr__"
+              expression: "B"
+              refId: "C"
+              type: "threshold"
+        noDataState: "OK"
+        execErrState: "OK"
+        for: "0s"
+        annotations:
+          summary: "Phat hien tan cong do mat khau (Brute Force) vao trang dang nhap!"
+          description: "So lan dang nhap that bai (LOGIN_FAILED) vuot qua 5 lan trong 1 phut. Kiem tra ngay log truy vet qua LogQL va IP nguon!"
+        labels:
+          severity: "critical"

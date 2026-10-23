@@ -137,3 +137,58 @@ docker compose up -d prometheus
 rm -f docker-compose.override.yml
 docker compose up -d prometheus
 ```
+
+---
+
+## 10. Hệ thống Log tập trung Loki + Promtail & Kịch bản sự cố An toàn thông tin
+Hệ thống sử dụng **Grafana Loki** kết hợp **Promtail** để thu thập, lập chỉ mục và phân tích log thời gian thực từ 12 container Docker:
+- **Truy vấn LogQL trên Grafana Explore** (`https://localhost/grafana/explore`):
+  - Log lỗi Nginx 4xx/5xx: `{job="docker", container=~".*nginx.*"} |~ "(4[0-9]{2}|5[0-9]{2})"`
+  - Log đăng nhập thất bại: `{job="docker", container=~".*web.*"} |= "Đăng nhập thất bại"`
+  - Log PostgreSQL truy vấn chậm: `{job="docker", container=~".*db.*"} |~ "(duration:|error|warning)"`
+- **Dashboard trực quan hóa log**:
+  - Tự động nạp dashboard **Logs - Asset & Security** tại thư mục **Asset Monitoring** trên Grafana.
+- **Kịch bản sự cố An toàn thông tin (Tấn công Brute Force)**:
+  - Script mô phỏng tấn công: `bash scripts/simulate_bruteforce.sh 20`
+  - Cơ chế phòng thủ 1 (Nginx): Cấu hình `limit_req_zone` giới hạn 5 yêu cầu/phút, trả HTTP 429 khi bị quét.
+  - Cơ chế phát hiện 2 (Loki + Grafana Alerting): Quy tắc cảnh báo `HighFailedLoginRate` tự động kích hoạt khi có trên 10 lần đăng nhập thất bại/phút.
+  - Webhook tiếp nhận cảnh báo: Dịch vụ `alert-sink` (Python/Flask) ghi nhận alert JSON và log chi tiết.
+  - Báo cáo sự cố chi tiết và bằng chứng truy vết log: `docs/su-co-bruteforce.md`.
+
+---
+
+## 11. Các biện pháp Hardening bảo mật & Quét lỗ hổng Trivy
+Toàn bộ hệ thống được áp dụng các biện pháp gia cố bảo mật chuyên sâu (Bước 6):
+1. **Chạy container với người dùng không đặc quyền (Non-root)**:
+   - `web`: chạy dưới tài khoản `node` (UID:GID `1000:1000`).
+   - `prometheus`, `nginx-exporter`, `postgres-exporter`: chạy dưới tài khoản `nobody` (UID:GID `65534:65534`).
+   - `grafana`: chạy dưới tài khoản `grafana` (UID:GID `472:472`).
+   - `loki`, `alert-sink`: chạy dưới tài khoản unprivileged `10001:10001`.
+   - *Ngoại lệ kỹ thuật có ghi chú*: `cadvisor` (đọc cgroups/sysfs của host), `promtail` (đọc docker.sock), `nginx` (tiến trình master bind cổng 80/443, worker chạy dưới UID 101).
+2. **Cô lập mạng 3 phân vùng (3-Tier Network Isolation)**:
+   - `asset_frontend` (bridge): Chỉ gồm `nginx`, `web`, `pgadmin`, `grafana`.
+   - `asset_backend` (bridge, `internal: true`): Chứa `asset-db`, `web`, `pgadmin`, `postgres-exporter`. Hoàn toàn không có gateway ra ngoài mạng Internet.
+   - `asset_monitoring` (bridge): Phân vùng giám sát riêng biệt cho Prometheus, Grafana, Loki, Promtail và các Exporter.
+   - CSDL `asset-db` chỉ kết nối duy nhất vào `asset_backend`, không công bố bất kỳ cổng nào ra máy host Windows.
+3. **Phân quyền tối thiểu CSDL PostgreSQL (Least Privilege)**:
+   - Chuyển quyền sở hữu bảng và sequence sang user quản trị hệ thống `db_admin`.
+   - User ứng dụng `asset_app` bị thu hồi toàn bộ quyền `CREATE` trên schema `public`, chỉ được cấp quyền `SELECT, INSERT, UPDATE, DELETE` trên bảng dữ liệu. Khi kẻ tấn công chèn lệnh `DROP TABLE` hoặc `CREATE TABLE`, PostgreSQL lập tức từ chối `permission denied`.
+4. **Hạn chế đặc quyền Linux & Giới hạn tài nguyên (Capabilities & Resource Limits)**:
+   - Áp dụng `security_opt: [no-new-privileges:true]` và `cap_drop: [ALL]` trên các dịch vụ.
+   - Giới hạn cứng RAM (`mem_limit`) và CPU (`cpus`) cho từng container để phòng chống tấn công DoS/kiệt quệ tài nguyên máy chủ.
+5. **Bảo mật Nginx & Ứng dụng Web**:
+   - Ẩn thông tin phiên bản qua `server_tokens off;` (Nginx) và `app.disable("x-powered-by")` (Express).
+   - Session cookie cấu hình an toàn tuyệt đối: `HttpOnly; Secure; SameSite=Strict`.
+   - Thiết lập đầy đủ các HTTP Security Headers: HSTS (1 năm), CSP, X-Frame-Options (SAMEORIGIN), X-Content-Type-Options (nosniff), Referrer-Policy, Permissions-Policy.
+   - Chặn tuyệt đối endpoint nhạy cảm `/nginx_status` trên cổng 443 HTTPS.
+6. **Bảo vệ cổng qua Tường lửa Windows Defender Firewall**:
+   - Trên môi trường Docker Desktop / WSL2, port forwarding được ánh xạ qua tiến trình Windows (`com.docker.backend.exe`, `wslrelay.exe`). Do đó UFW bên trong WSL2 không có tác dụng bảo vệ cổng máy host.
+   - Quy tắc tường lửa Windows host để chỉ cho phép máy trạm quản trị kết nối vào cổng 80/443:
+     ```powershell
+     # Chạy trên Windows PowerShell với quyền Administrator:
+     New-NetFirewallRule -DisplayName "AssetApp_Allow_Admin_HTTPS" -Direction Inbound -LocalPort 443 -Protocol TCP -Action Allow -RemoteAddress "192.168.1.10"
+     New-NetFirewallRule -DisplayName "AssetApp_Block_Others_HTTPS" -Direction Inbound -LocalPort 443 -Protocol TCP -Action Block
+     ```
+7. **Quét lỗ hổng an ninh bằng Trivy**:
+   - Tự động quét mã nguồn và toàn bộ 8 Docker images thông qua script: `bash scripts/run_trivy_scan.sh`
+   - Báo cáo kết quả quét chi tiết lưu tại: `evidence/buoc6-trivy.txt`.

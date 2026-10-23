@@ -230,3 +230,23 @@ BEGIN
   GRANT pg_monitor TO exporter;
   GRANT CONNECT ON DATABASE assetdb TO exporter;
 END $$;
+
+-- Hardening Least Privilege for asset_app (Bước 6)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'asset_app') THEN
+    CREATE ROLE asset_app WITH LOGIN PASSWORD 'e#S_DFVU22c_tziDZiUCX@bX';
+  END IF;
+  
+  -- Grant connect and schema usage
+  GRANT CONNECT ON DATABASE assetdb TO asset_app;
+  GRANT USAGE ON SCHEMA public TO asset_app;
+
+  -- Grant only SELECT, INSERT, UPDATE, DELETE on tables
+  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO asset_app;
+  GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO asset_app;
+
+  -- Revoke CREATE on schema public
+  REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+  REVOKE CREATE ON SCHEMA public FROM asset_app;
+END $$;
