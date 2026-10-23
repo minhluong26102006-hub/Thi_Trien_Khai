@@ -84,6 +84,78 @@ services:
     networks:
       - asset_net
 
+  prometheus:
+    container_name: asset-prometheus
+    image: prom/prometheus:v2.53.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - asset_net
+
+  grafana:
+    container_name: asset-grafana
+    image: grafana/grafana:11.0.0
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SERVER_ROOT_URL: https://localhost/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - asset_net
+
+  cadvisor:
+    container_name: asset-cadvisor
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: unless-stopped
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=10s
+      - --disable_metrics=disk,tcp,udp,percpu,sched,process
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - asset_net
+
+  nginx-exporter:
+    container_name: asset-nginx-exporter
+    image: nginx/nginx-prometheus-exporter:1.2.0
+    restart: unless-stopped
+    command:
+      - -nginx.scrape-uri=http://nginx/nginx_status
+    depends_on:
+      - nginx
+    networks:
+      - asset_net
+
+  postgres-exporter:
+    container_name: asset-postgres-exporter
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATA_SOURCE_NAME: postgresql://exporter:${POSTGRES_EXPORTER_PASSWORD}@db:5432/assetdb?sslmode=disable
+    networks:
+      - asset_net
+
 volumes:
   db_data:
     name: asset_db_data
@@ -91,6 +163,10 @@ volumes:
     name: asset_web_uploads
   pgadmin_data:
     name: asset_pgadmin_data
+  prometheus_data:
+    name: asset_prometheus_data
+  grafana_data:
+    name: asset_grafana_data
 
 networks:
   asset_net:

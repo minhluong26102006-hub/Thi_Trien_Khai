@@ -221,3 +221,12 @@ INSERT INTO maintenance_logs (id, asset_id, type, description, cost, started_at,
 (3, 1, 'upgrade', 'Nâng cấp thanh RAM từ 8GB lên 16GB Kingston DDR4', 850000, CURRENT_TIMESTAMP - INTERVAL '30 days', CURRENT_TIMESTAMP - INTERVAL '29 days', 3);
 
 SELECT setval('maintenance_logs_id_seq', 3);
+-- Prometheus postgres_exporter user
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'exporter') THEN
+    CREATE ROLE exporter WITH LOGIN PASSWORD 'Exp_SecPass_2026_dbmon!';
+  END IF;
+  GRANT pg_monitor TO exporter;
+  GRANT CONNECT ON DATABASE assetdb TO exporter;
+END $$;

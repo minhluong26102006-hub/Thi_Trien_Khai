@@ -85,3 +85,55 @@ docker compose exec nginx nginx -t
    - `Username`: `asset_app`
    - `Password`: Nhập mật khẩu trong `.env` (`POSTGRES_PASSWORD`)
 5. Nhấn **Save**. Kiểm tra nhánh `Schemas` -> `public` -> `Tables` sẽ thấy đủ 7 bảng: `users`, `categories`, `locations`, `assets`, `loans`, `loan_items`, `maintenance_logs`.
+
+---
+
+## 7. Hệ thống Giám sát Prometheus và Grafana
+Hệ thống tích hợp giám sát tập trung qua Prometheus và trực quan hóa với Grafana:
+- **Grafana Web Dashboard**:
+  - URL: `https://localhost/grafana/` (chạy qua Nginx Reverse Proxy với hỗ trợ WebSocket).
+  - Provisioned tự động thư mục dashboard **Asset Monitoring** gồm 3 bảng điều khiển chuyên sâu:
+    1. `Asset - Containers`: Tỷ lệ CPU %, bộ nhớ RAM, lưu lượng mạng Network I/O theo từng container (thu thập từ cAdvisor).
+    2. `Asset - Nginx`: Kết nối đang hoạt động (Active Connections), tần suất yêu cầu (Requests/sec), kết nối Handled vs Accepted (thu thập từ Nginx Prometheus Exporter).
+    3. `Asset - PostgreSQL`: Số lượng kết nối Client, giao dịch/giây (Commits vs Rollbacks), Tuples Returned/Fetched, tỷ lệ Cache Hit Ratio (%), kích thước Database `assetdb` (thu thập từ PostgreSQL Exporter).
+
+---
+
+## 8. Lệnh tạo người dùng `exporter` an toàn trong CSDL PostgreSQL
+Đối với trường hợp volume CSDL đã tồn tại từ trước (khi `init.sql` không chạy lại), chạy lệnh sau trong WSL để tạo user `exporter` có role giám sát `pg_monitor`:
+```bash
+docker exec -i asset-db psql -U asset_app -d assetdb -c "
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'exporter') THEN
+    CREATE ROLE exporter WITH LOGIN PASSWORD 'Exp_SecPass_2026_dbmon!';
+  ELSE
+    ALTER ROLE exporter WITH PASSWORD 'Exp_SecPass_2026_dbmon!';
+  END IF;
+  GRANT pg_monitor TO exporter;
+  GRANT CONNECT ON DATABASE assetdb TO exporter;
+END \$\$;
+"
+```
+
+---
+
+## 9. Hướng dẫn xem trang Prometheus Targets an toàn
+Theo kiến trúc bảo mật, Prometheus (cổng 9090) không được publish công khai ra bên ngoài mà chỉ chạy nội bộ trong mạng `asset_net`. Để kiểm tra hoặc chụp ảnh trang Targets:
+1. Tạo tệp đè cấu hình tạm thời `docker-compose.override.yml` (tệp này đã nằm trong `.gitignore`, không commit):
+```yaml
+services:
+  prometheus:
+    ports:
+      - "127.0.0.1:9090:9090"
+```
+2. Cập nhật dịch vụ Prometheus:
+```bash
+docker compose up -d prometheus
+```
+3. Mở trình duyệt truy cập: `http://localhost:9090/targets` (xác nhận tất cả các job `cadvisor`, `nginx`, `postgres`, `prometheus` đều có trạng thái `UP`).
+4. Chụp ảnh xong, xóa tệp override và áp dụng lại cấu hình để đóng cổng 9090:
+```bash
+rm -f docker-compose.override.yml
+docker compose up -d prometheus
+```
